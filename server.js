@@ -24,12 +24,8 @@ async function createDirectoryIfNotExists(directory) {
   }
 }
 
-// 1. 调整图片质量 (暂时支持PNG JPEG 和 WebP 格式)
-let quality = 80; // 0-100 (100 为最高质量)
-// 3. 转换图片格式
-const format = 'jpeg';
-
-async function compressImages(directory,  quality = 80) {
+let quality = 60; // 0-100 (100 为最高质量)
+async function compressImages(directory, quality) {
   const compressedDirectory = path.join(directory, compressedSubdirectory);
   await createDirectoryIfNotExists(compressedDirectory);
 
@@ -45,9 +41,18 @@ async function compressImages(directory,  quality = 80) {
     console.log('filePath', filePath);
     console.log('-----------------------');
     const compressedFilePath = path.join(compressedDirectory, file);
-    await sharp(filePath)
-      .toFormat(format, { quality })
-      .toFile(compressedFilePath);
+    const inputMetadata = await sharp(filePath).metadata();
+    if (inputMetadata.format === 'jpeg') {
+      await sharp(filePath)
+        .jpeg({ quality })
+        .toFile(compressedFilePath);
+    } else if (inputMetadata.format === 'png') {
+      await sharp(filePath)
+        .png({ quality})
+        .toFile(compressedFilePath);
+    } else {
+      console.error('暂不支持其他格式');
+    }
 
     console.log(`图片已保存至: ${compressedFilePath}`);
   }
@@ -110,7 +115,7 @@ async function handleDownload(res, zipFilePath) {
 }
 
 app.post('/upload', upload.single('file'), async (req, res) => {
-  quality = req.body.quality;
+  quality = req.body?.quality ?? quality;
   const outputDir = path.join(__dirname, extractedDirectory);
   const zipFilePath = path.resolve(__dirname, outputZipFilename);
   try {
@@ -138,5 +143,5 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server is running at http://127.0.0.1:${port}`);
 });
