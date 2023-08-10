@@ -25,7 +25,7 @@ async function createDirectoryIfNotExists(directory) {
 }
 
 // 1. 调整图片质量 (暂时支持PNG JPEG 和 WebP 格式)
-//let quality = 80; // 0-100 (100 为最高质量)
+let quality = 80; // 0-100 (100 为最高质量)
 // 3. 转换图片格式
 const format = 'jpeg';
 
